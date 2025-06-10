@@ -317,6 +317,64 @@ impl ConversationHistoryWidget {
             }
         }
     }
+
+    /// Return a summary of user steps for bug report generation.
+    pub fn bug_report_steps(&self) -> Vec<crate::bug_report::BugReportStep> {
+        use ratatui::text::Line;
+
+        fn line_to_string(line: &Line<'_>) -> String {
+            line.spans.iter().map(|s| s.content.as_ref()).collect::<String>()
+        }
+
+        let mut steps = Vec::new();
+        let mut i = 0;
+        while i < self.entries.len() {
+            if let HistoryCell::UserPrompt { view } = &self.entries[i].cell {
+                let message = view
+                    .lines
+                    .iter()
+                    .skip(1)
+                    .take(view.lines.len().saturating_sub(2))
+                    .map(line_to_string)
+                    .collect::<Vec<_>>()
+                    .join(" ")
+                    .trim()
+                    .to_string();
+
+                let mut reasoning = 0;
+                let mut tools = 0;
+                i += 1;
+                while i < self.entries.len() {
+                    match &self.entries[i].cell {
+                        HistoryCell::UserPrompt { .. } => break,
+                        HistoryCell::AgentReasoning { .. } | HistoryCell::AgentMessage { .. } => {
+                            reasoning += 1;
+                        }
+                        HistoryCell::ActiveExecCommand { .. }
+                        | HistoryCell::CompletedExecCommand { .. }
+                        | HistoryCell::ActiveMcpToolCall { .. }
+                        | HistoryCell::CompletedMcpToolCall { .. }
+                        | HistoryCell::CompletedMcpToolCallWithImageOutput { .. }
+                        | HistoryCell::PendingPatch { .. } => {
+                            tools += 1;
+                        }
+                        _ => {}
+                    }
+                    i += 1;
+                }
+
+                steps.push(crate::bug_report::BugReportStep {
+                    message,
+                    reasoning,
+                    tool_calls: tools,
+                });
+            } else {
+                i += 1;
+            }
+        }
+
+        steps
+    }
 }
 
 impl WidgetRef for ConversationHistoryWidget {

@@ -395,6 +395,50 @@ impl ChatWidget<'_> {
             tracing::error!("failed to submit op: {e}");
         }
     }
+
+    pub(crate) fn bug_report_url(&self) -> String {
+        use crate::bug_report::{build_bug_report_url, BugReportStep};
+        let steps = self.conversation_history.bug_report_steps();
+        let os = std::process::Command::new("uname")
+            .arg("-s")
+            .output()
+            .ok()
+            .and_then(|o| String::from_utf8(o.stdout).ok())
+            .map(|s| s.trim().to_lowercase())
+            .unwrap_or_else(|| std::env::consts::OS.to_string());
+        let arch = std::process::Command::new("uname")
+            .arg("-m")
+            .output()
+            .ok()
+            .and_then(|o| String::from_utf8(o.stdout).ok())
+            .map(|s| s.trim().to_string())
+            .unwrap_or_else(|| std::env::consts::ARCH.to_string());
+        let release = std::process::Command::new("uname")
+            .arg("-r")
+            .output()
+            .ok()
+            .and_then(|o| String::from_utf8(o.stdout).ok())
+            .unwrap_or_else(|| "unknown".into());
+        let platform = format!(
+            "`{}` | `{}` | `{}`",
+            os,
+            arch,
+            release.trim()
+        );
+
+        build_bug_report_url(
+            &steps,
+            env!("CARGO_PKG_VERSION"),
+            &self.config.model,
+            &platform,
+        )
+    }
+
+    pub(crate) fn push_background_message(&mut self, message: String) {
+        self.conversation_history.add_background_event(message);
+        self.conversation_history.scroll_to_bottom();
+        self.request_redraw();
+    }
 }
 
 impl WidgetRef for &ChatWidget<'_> {
