@@ -247,6 +247,12 @@ impl<'a> App<'a> {
                             tracing::error!("Failed to toggle mouse mode: {e}");
                         }
                     }
+                    SlashCommand::Bug => {
+                        if let AppState::Chat { widget } = &mut self.app_state {
+                            let url = widget.bug_report_url();
+                            widget.push_background_message(format!("\u{1F517} Bug report URL: {}", url));
+                        }
+                    }
                     SlashCommand::Quit => {
                         break;
                     }

@@ -18,6 +18,7 @@ use codex_core::protocol::McpToolCallEndEvent;
 use codex_core::protocol::Op;
 use codex_core::protocol::PatchApplyBeginEvent;
 use codex_core::protocol::TaskCompleteEvent;
+use os_info;
 use crossterm::event::KeyEvent;
 use ratatui::buffer::Buffer;
 use ratatui::layout::Constraint;
@@ -394,6 +395,31 @@ impl ChatWidget<'_> {
         if let Err(e) = self.codex_op_tx.send(op) {
             tracing::error!("failed to submit op: {e}");
         }
+    }
+
+    pub(crate) fn bug_report_url(&self) -> String {
+        use crate::bug_report::{build_bug_report_url, BugReportStep};
+        let steps = self.conversation_history.bug_report_steps();
+        let info = os_info::get();
+        let platform = format!(
+            "`{}` | `{}` | `{}`",
+            info.os_type(),
+            std::env::consts::ARCH,
+            info.version()
+        );
+
+        build_bug_report_url(
+            &steps,
+            env!("CARGO_PKG_VERSION"),
+            &self.config.model,
+            &platform,
+        )
+    }
+
+    pub(crate) fn push_background_message(&mut self, message: String) {
+        self.conversation_history.add_background_event(message);
+        self.conversation_history.scroll_to_bottom();
+        self.request_redraw();
     }
 }
 

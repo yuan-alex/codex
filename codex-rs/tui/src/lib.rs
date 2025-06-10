@@ -37,6 +37,7 @@ mod markdown;
 mod mouse_capture;
 mod scroll_event_helper;
 mod slash_command;
+mod bug_report;
 mod status_indicator_widget;
 mod text_block;
 mod text_formatting;
