@@ -28,7 +28,7 @@ pub fn build_bug_report_url(
             }
             let msg = step.message.replace('\n', " ");
             bullets.push_str(&format!(
-                "- ```\n  {}\n  ```\n  - `{}` reasoning | `{}` tool",
+                "- ```\n  {}\n  ```\n  - `{}` reasoning | `{}` tool`",
                 msg, step.reasoning, step.tool_calls
             ));
         }

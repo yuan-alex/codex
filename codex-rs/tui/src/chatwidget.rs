@@ -18,7 +18,6 @@ use codex_core::protocol::McpToolCallEndEvent;
 use codex_core::protocol::Op;
 use codex_core::protocol::PatchApplyBeginEvent;
 use codex_core::protocol::TaskCompleteEvent;
-use os_info;
 use crossterm::event::KeyEvent;
 use ratatui::buffer::Buffer;
 use ratatui::layout::Constraint;
@@ -400,12 +399,19 @@ impl ChatWidget<'_> {
     pub(crate) fn bug_report_url(&self) -> String {
         use crate::bug_report::{build_bug_report_url, BugReportStep};
         let steps = self.conversation_history.bug_report_steps();
-        let info = os_info::get();
+        let os = std::env::consts::OS;
+        let arch = std::env::consts::ARCH;
+        let release = std::process::Command::new("uname")
+            .arg("-r")
+            .output()
+            .ok()
+            .and_then(|o| String::from_utf8(o.stdout).ok())
+            .unwrap_or_else(|| "unknown".into());
         let platform = format!(
             "`{}` | `{}` | `{}`",
-            info.os_type(),
-            std::env::consts::ARCH,
-            info.version()
+            os,
+            arch,
+            release.trim()
         );
 
         build_bug_report_url(
