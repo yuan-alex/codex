@@ -28,8 +28,10 @@ pub fn build_bug_report_url(
             }
             let msg = step.message.replace('\n', " ");
             bullets.push_str(&format!(
-                "- ```\n  {}\n  ```\n  - `{}` reasoning | `{}` tool`",
-                msg, step.reasoning, step.tool_calls
+                "- ```\n  {}\n  ```\n  - `{}` reasoning | `{}` tool calls",
+                msg,
+                step.reasoning,
+                step.tool_calls,
             ));
         }
         serializer.append_pair("steps", &bullets);

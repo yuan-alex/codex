@@ -399,8 +399,20 @@ impl ChatWidget<'_> {
     pub(crate) fn bug_report_url(&self) -> String {
         use crate::bug_report::{build_bug_report_url, BugReportStep};
         let steps = self.conversation_history.bug_report_steps();
-        let os = std::env::consts::OS;
-        let arch = std::env::consts::ARCH;
+        let os = std::process::Command::new("uname")
+            .arg("-s")
+            .output()
+            .ok()
+            .and_then(|o| String::from_utf8(o.stdout).ok())
+            .map(|s| s.trim().to_lowercase())
+            .unwrap_or_else(|| std::env::consts::OS.to_string());
+        let arch = std::process::Command::new("uname")
+            .arg("-m")
+            .output()
+            .ok()
+            .and_then(|o| String::from_utf8(o.stdout).ok())
+            .map(|s| s.trim().to_string())
+            .unwrap_or_else(|| std::env::consts::ARCH.to_string());
         let release = std::process::Command::new("uname")
             .arg("-r")
             .output()
